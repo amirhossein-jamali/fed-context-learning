@@ -1,0 +1,15 @@
+FedContext-Learning
+Copyright 2025 Amirhossein Jamali
+
+This product includes software developed by the following third-party libraries:
+
+- PyTorch (https://pytorch.org/)
+- NumPy (https://numpy.org/)
+- Matplotlib (https://matplotlib.org/)
+- Pillow (https://python-pillow.org/)
+- PyYAML (https://pyyaml.org/)
+- Requests (https://requests.readthedocs.io/)
+- tqdm (https://tqdm.github.io/)
+- gdown (https://github.com/wkentaro/gdown)
+
+For more information, please refer to the LICENSE file. 
