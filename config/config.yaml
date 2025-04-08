@@ -1,6 +1,6 @@
 federated_learning:
   num_clients: 4
-  num_rounds: 2  # Reduced from 5 to 2 for even quicker testing
+  num_rounds: 100  # Reduced from 5 to 2 for even quicker testing
   local_epochs: 2
   batch_size: 64
   learning_rate: 0.01
@@ -14,7 +14,7 @@ model:
 
 data:
   domains: ["photo", "art_painting", "cartoon", "sketch"]
-  test_domain: "sketch"  # Domain to use for testing
+  test_domain: "photo"  # Domain to use for testing
   img_size: 64
   data_path: "./data/PACS"
 

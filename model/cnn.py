@@ -3,13 +3,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class SimpleCNN(nn.Module):
-    def __init__(self, input_channels=3, num_classes=7):
+    def __init__(self, input_channels=3, num_classes=7, small_dim=64):
         """
-        A simple CNN model for the PACS dataset.
+        A simple CNN model for the PACS dataset with additional small embedding output.
         
         Args:
             input_channels (int): Number of input channels (3 for RGB images)
             num_classes (int): Number of output classes (7 for PACS)
+            small_dim (int): Dimension of the small embedding space
         """
         super(SimpleCNN, self).__init__()
         
@@ -21,8 +22,13 @@ class SimpleCNN(nn.Module):
         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1)
         self.bn3 = nn.BatchNorm2d(128)
         
-        # Classifier
+        # Base embedding layer
         self.fc1 = nn.Linear(128 * 8 * 8, 512)
+        
+        # Small embedding projection
+        self.proj_small = nn.Linear(512, small_dim)
+        
+        # Classifier
         self.dropout = nn.Dropout(0.5)
         self.fc2 = nn.Linear(512, num_classes)
         
@@ -38,11 +44,20 @@ class SimpleCNN(nn.Module):
         x = F.max_pool2d(x, 2)  # [B, 128, 8, 8]
         
         x = x.view(-1, 128 * 8 * 8)
-        x = F.relu(self.fc1(x))
-        x = self.dropout(x)
-        x = self.fc2(x)
+        base_features = F.relu(self.fc1(x))  # [B, 512]
         
-        return x
+        # Get small embedding
+        z_small = self.proj_small(base_features)  # [B, small_dim]
+        
+        # Get classification logits
+        x = self.dropout(base_features)
+        logits = self.fc2(x)
+        
+        return {
+            'logits': logits,
+            'z_small': z_small,
+            'base_features': base_features
+        }
 
 def get_model(config):
     """
@@ -57,7 +72,8 @@ def get_model(config):
     if config['model']['name'] == 'SimpleCNN':
         model = SimpleCNN(
             input_channels=config['model']['input_channels'],
-            num_classes=config['model']['num_classes']
+            num_classes=config['model']['num_classes'],
+            small_dim=config['model'].get('small_dim', 64)
         )
     else:
         raise ValueError(f"Unknown model: {config['model']['name']}")
