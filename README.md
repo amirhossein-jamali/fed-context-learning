@@ -183,11 +183,11 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 If you use this code in your research, please cite:
 
 ```
-@software{jamali2023federated,
+@software{jamali2025federated,
   author = {Jamali, Amirhossein},
   title = {Federated Learning with CLIP Alignment},
-  year = {2023},
-  url = {https://github.com/your-username/federated-clip-alignment}
+  year = {2025},
+  url = {https://github.com/amirhossein-jamali/fed-context-learning}
 }
 ```
 
