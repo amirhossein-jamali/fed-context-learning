@@ -1,50 +1,89 @@
-# FedContext-Learning
+# Federated Learning with CLIP Alignment
 
-A context-aware federated learning framework with domain generalization capabilities, designed to evolve into an LLM-powered distributed learning system.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-## 🎯 Project Vision
+## Overview
 
-This project aims to build a federated learning system that can:
-1. Learn from multiple domains while preserving privacy
-2. Adapt to new domains through context-aware aggregation
-3. Leverage large language models for knowledge distillation
-4. Maintain lightweight clients while benefiting from server-side knowledge
+This project implements a novel federated learning system with CLIP semantic alignment, enabling privacy-preserving, semantically-rich distributed learning. The key innovation is bridging federated learning with large foundation models (CLIP) while preserving privacy.
 
-## 🚀 Development Roadmap
+### Key Features
 
-### Phase 1: Basic FL with CNN
-- [x] Implement basic federated learning with CNN
-- [x] Support for PACS dataset
-- [x] FedAvg aggregation
+- **Federated Learning Architecture**: Train models across multiple clients without sharing raw data
+- **CLIP Semantic Alignment**: Align local embeddings with CLIP's rich semantic space
+- **Privacy Preservation**: Share only model/mapper weights, never raw data or CLIP embeddings
+- **Dual Objective Training**: Optimize for both classification accuracy and semantic mapping
+- **Differential Privacy Option**: Add calibrated noise for enhanced privacy guarantees
 
-### Phase 2: Unsupervised Domain Embedding
-- [ ] Extract domain-specific features
-- [ ] Implement unsupervised domain embedding
-- [ ] Add domain similarity metrics
+## How It Works
 
-### Phase 3: Adaptive Aggregation
-- [ ] Implement attention-based aggregation
-- [ ] Add domain-aware weighting
-- [ ] Improve generalization to unseen domains
+1. **Client-Side**: 
+   - CNN extracts compact embeddings (`z_small`) and class predictions
+   - Local CLIP model produces rich embeddings (`z_clip`)
+   - A mapper network (φ) transforms `z_small` to match CLIP's space
+   - Models train with dual loss (classification + alignment)
 
-### Phase 4: Knowledge Distillation
-- [ ] Integrate LLM for server-side knowledge
-- [ ] Implement teacher-student learning
-- [ ] Add knowledge transfer mechanisms
+2. **Server-Side**:
+   - Aggregates CNN and mapper weights from all clients
+   - Creates global model and distributes back to clients
+   - Never sees raw data or CLIP embeddings
 
-### Phase 5: LLM-Powered Learning
-- [ ] Add lightweight LLM support for clients
-- [ ] Implement prompt-based learning
-- [ ] Add cross-modal knowledge transfer
+3. **Privacy Mechanism**:
+   - Only small network weights shared (not raw data)
+   - Optional differential privacy noise
+   - CLIP model remains local as a "teacher"
 
-## 📦 Installation
+## Architecture
+
+```
+┌─────────────┐                                 ┌─────────────┐
+│   Client 1  │                                 │   Client 2  │
+│  ┌───────┐  │                                 │  ┌───────┐  │
+│  │ Image │  │                                 │  │ Image │  │
+│  └───┬───┘  │                                 │  └───┬───┘  │
+│      │      │                                 │      │      │
+│  ┌───▼───┐  │                                 │  ┌───▼───┐  │
+│  │  CNN  │  │                                 │  │  CNN  │  │
+│  └───┬───┘  │                                 │  └───┬───┘  │
+│      │      │                                 │      │      │
+│  ┌───▼────┐ │                                 │  ┌───▼────┐ │
+│  │z_small │ │                                 │  │z_small │ │
+│  └─┬────┬─┘ │                                 │  └─┬────┬─┘ │
+│    │    │   │                                 │    │    │   │
+│┌───▼──┐ │   │                                 │┌───▼──┐ │   │
+││ CLIP │ │   │                                 ││ CLIP │ │   │
+│└──┬───┘ │   │                                 │└──┬───┘ │   │
+│   │     │   │                                 │   │     │   │
+│┌──▼───┐ │   │                                 │┌──▼───┐ │   │
+││z_clip│ │   │                                 ││z_clip│ │   │
+│└──┬───┘ │   │                                 │└──┬───┘ │   │
+│   │   ┌─▼─┐ │                                 │   │   ┌─▼─┐ │
+│   └──►│ φ │ │                                 │   └──►│ φ │ │
+│       └─┬─┘ │                                 │       └─┬─┘ │
+│         │   │                                 │         │   │
+└─────────┼───┘                                 └─────────┼───┘
+          │                                               │
+          │               ┌─────────┐                     │
+          └──────────────►│ Server  │◄────────────────────┘
+                          │         │
+                          └─────────┘
+```
+
+## Installation
+
+### Prerequisites
+
+- Python 3.7+
+- PyTorch 1.9+
+- CUDA-compatible GPU (optional, but recommended)
+
+### Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/amirhossein-jamali/fed-context-learning.git
-cd fed-context-learning
+git clone https://github.com/your-username/federated-clip-alignment.git
+cd federated-clip-alignment
 
-# Create and activate virtual environment
+# Create a virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
@@ -52,33 +91,106 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## 🚀 Usage
+## Usage
 
-Basic usage:
+### Basic Usage
+
 ```bash
-python run.py
+# Run with default settings
+python run_clip_alignment.py
+
+# Run with a specific test domain
+python run_clip_alignment.py --test-domain cartoon --lambda-align 0.1
 ```
 
-With custom configuration:
+### Advanced Options
+
 ```bash
-python run.py --config path/to/config.yaml
+# Enable differential privacy
+python run_clip_alignment.py --use-dp-noise --dp-noise-std 0.01
+
+# Customize embedding dimensions
+python run_clip_alignment.py --small-dim 128 --mapper-hidden-dim 512
+
+# Download PACS dataset if not exists
+python run_clip_alignment.py --download-data
 ```
 
-## 📚 Documentation
+## Parameter Explanations
 
-Detailed documentation is available in the `docs` directory:
-- [Architecture Overview](docs/architecture.md)
-- [API Reference](docs/api.md)
-- [Configuration Guide](docs/configuration.md)
+| Parameter | Description |
+|-----------|-------------|
+| `--test-domain` | Domain to use for testing (photo, art_painting, cartoon, sketch) |
+| `--lambda-align` | Weight for alignment loss (higher = stronger CLIP alignment) |
+| `--small-dim` | Dimension of small embedding (lower = more compression) |
+| `--use-dp-noise` | Enable differential privacy noise |
+| `--dp-noise-std` | Noise level for differential privacy (higher = more privacy) |
 
-## 🤝 Contributing
+## Project Structure
 
-This is a personal project. Contributions are not currently being accepted.
+```
+federated-learning/
+├── client/                    # Client-side code
+│   ├── clip_alignment_client.py  # Client with CLIP alignment
+│   └── trainer.py             # Base trainer
+├── config/                    # Configuration files
+│   └── config.yaml            # Main configuration
+├── data/                      # Dataset handling
+│   ├── download_pacs.py       # PACS dataset downloader
+│   └── pacs_loader.py         # PACS data loader
+├── model/                     # Model definitions
+│   ├── clip_alignment.py      # CLIP alignment components
+│   ├── cnn.py                 # CNN model with small embeddings
+│   └── mapper.py              # Embedding mapper network
+├── server/                    # Server-side code
+│   ├── clip_coordinator.py    # Server with CLIP support
+│   └── mapper_aggregator.py   # Aggregates mapper weights
+├── utils/                     # Utilities
+│   └── metrics.py             # Evaluation metrics
+├── requirements.txt           # Dependencies
+└── run_clip_alignment.py      # Main script
+```
 
-## 📝 License
+## Results and Evaluation
+
+The system demonstrates several key advantages:
+
+1. **Privacy Preservation**: Raw data never leaves the clients
+2. **Semantic Knowledge Transfer**: Local models benefit from CLIP's knowledge
+3. **Efficiency**: Compact embeddings (64D) aligned with rich CLIP space (512D)
+4. **Cross-Domain Generalization**: Better transfer to new domains
+
+## Innovative Aspects
+
+1. **Bridging FL and Foundation Models**: Using CLIP as a local teacher in a federated architecture
+2. **Compressed Embedding Mapping**: Mapping small embeddings to rich semantic space
+3. **Privacy-Enhanced Aggregation**: Only sharing mapper weights
+4. **Dual-Objective Training**: Balancing classification and alignment
+
+## Limitations and Future Work
+
+- Current implementation focuses on image classification
+- Performance depends on domain similarity
+- Adding more advanced privacy mechanisms
+- Extending to other foundation models (DALL-E, GPT)
+
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 📧 Contact
+## Citation
 
-For any questions or suggestions, please contact the project owner directly. 
+If you use this code in your research, please cite:
+
+```
+@software{jamali2023federated,
+  author = {Jamali, Amirhossein},
+  title = {Federated Learning with CLIP Alignment},
+  year = {2023},
+  url = {https://github.com/your-username/federated-clip-alignment}
+}
+```
+
+## Contact
+
+For questions or comments, please open an issue or contact the repository owner. 
